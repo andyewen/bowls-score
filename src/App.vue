@@ -8,8 +8,11 @@
         </header>
         <div ref="body" class="body">
             <table ref="ends-table" class="ends">
-                <tr v-for="end in ends">
-                    <td v-for="score in end">{{ score }}</td>
+                <tr v-for="end, endNumber in ends">
+                    <template v-for="score, i in end">
+                        <td>{{ score }}</td>
+                        <td v-if="i == 0" class="end-number">{{ endNumber + 1}}</td>
+                    </template>
                 </tr>
             </table>
         </div>
@@ -26,8 +29,9 @@
                 </div>
             </div>
             <div class="confirm-row">
-                <button @click="confirmScores" class="confirm-button">Confirm</button>
-                <button @click="restart">Restart</button>
+                <button @click="confirmScores" class="confirm-button">Confirm end</button>
+                <button @click="removeEnd">Remove end</button>
+                <button @click="restart">Restart game</button>
             </div>
         </footer>
     </div>
@@ -93,6 +97,14 @@ export default {
                 Math.max(this.currentGame.players[i].endScore + amount, 0)
             );
         },
+        removeEnd() {
+            if (window.confirm('Are you sure you want to remove the last end?')) {
+                for (let player of this.currentGame.players) {
+                    player.endScore = player.ends[player.ends.length - 1];
+                    player.ends = player.ends.slice(0, player.ends.length - 1);
+                }
+            }
+        },
         confirmScores() {
             for (let player of this.currentGame.players) {
                 player.ends.push(player.endScore);
@@ -100,7 +112,7 @@ export default {
             }
         },
         restart() {
-            if (window.confirm('Are you sure?')) {
+            if (window.confirm('Are you sure you want to restart?')) {
                 this.currentGame = makeGame();
             }
         }
@@ -159,7 +171,6 @@ export default {
 
     footer {
         bottom: 0;
-        height: 120px;
         overflow: hidden;
     }
 
@@ -180,6 +191,11 @@ export default {
     .ends td {
         font-size: 24px;
         text-align: center;
+    }
+
+    .ends td.end-number {
+        width: 3em;
+        color: #888;
     }
 
     .player-total-container {
