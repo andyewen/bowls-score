@@ -1,10 +1,13 @@
 <template>
     <div id="app">
         <header>
-            <template v-for="p in currentGame.players"><input type="text" v-model="p.name" class="player-name"></template>
+            <template v-for="p, i in currentGame.players">
+                <input type="text" v-model="p.name" class="player-name"
+                       :placeholder="'Player ' + (i + 1)">
+            </template>
         </header>
-        <div class="body">
-            <table class="ends">
+        <div ref="body" class="body">
+            <table ref="ends-table" class="ends">
                 <tr v-for="end in ends">
                     <td v-for="score in end">{{ score }}</td>
                 </tr>
@@ -24,6 +27,7 @@
             </div>
             <div class="confirm-row">
                 <button @click="confirmScores" class="confirm-button">Confirm</button>
+                <button @click="restart">Restart</button>
             </div>
         </footer>
     </div>
@@ -34,11 +38,8 @@
 let STORAGE_KEY = 'bowls-0.1';
 let storage = {
     fetch: () => {
-        let game = {
-            players: [makePlayer(), makePlayer()]
-        };
         let savedGame = window.localStorage.getItem(STORAGE_KEY);
-        return savedGame ? JSON.parse(savedGame) : game;
+        return savedGame ? JSON.parse(savedGame) : makeGame();
     },
     save: (game) => {
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(game));
@@ -49,6 +50,10 @@ let makePlayer = () => ({
     name: '',
     endScore: 0,
     ends: [],
+});
+
+let makeGame = () => ({
+    players: [makePlayer(), makePlayer()]
 });
 
 export default {
@@ -93,6 +98,11 @@ export default {
                 player.ends.push(player.endScore);
                 player.endScore = 0;
             }
+        },
+        restart() {
+            if (window.confirm('Are you sure?')) {
+                this.currentGame = makeGame();
+            }
         }
     },
     watch: {
@@ -102,6 +112,13 @@ export default {
                 storage.save(game);
             },
             deep: true
+        },
+        ends() {
+            // Scroll to bottom of ends listing when it changes.
+            window.setTimeout(() => {
+                let body = this.$refs.body;
+                body.scrollTop = body.scrollHeight;
+            });
         }
     }
 }
@@ -166,6 +183,7 @@ export default {
     }
 
     .player-total-container {
+        box-sizing: border-box;
         display: inline-block;
         width: 50%;
         padding: 8px;
